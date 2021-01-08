@@ -1,0 +1,113 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ${PROJECT_ITEM_NAME}
+  # 命名空间：按照总项目名称设置；
+  namespace: ${NAME_SPACE}
+  labels:
+    k8s-app: ${PROJECT_ITEM_NAME}
+spec:
+  replicas: ${REPLICAS_1}
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      k8s-app: ${PROJECT_ITEM_NAME}
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        k8s-app: ${PROJECT_ITEM_NAME}
+        name: ${PROJECT_ITEM_NAME}
+    spec:
+      terminationGracePeriodSeconds: 60
+      initContainers:
+      - image: registry-vpc.cn-hangzhou.aliyuncs.com/${REPO}/alpine:3.8-bash
+        command: ["/sbin/sysctl","-w","vm.max_map_count=262144"]
+        name: ${PROJECT_ITEM_NAME}-init
+        securityContext:
+          privileged: true      
+      containers:
+      - image: registry-vpc.cn-hangzhou.aliyuncs.com/${REPO}/${PROJECT_ITEM_NAME}:${IMAGE_ID}
+        name: ${PROJECT_ITEM_NAME}
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: ${LIM_CPU}
+            memory: ${LIM_MEM}
+          requests:
+            cpu: ${REQ_CPU}
+            memory: ${REQ_MEM}
+        readinessProbe:
+          failureThreshold: 30
+          httpGet:
+            path: /health
+            port: ${PORT}
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 1
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - sh
+              - -x
+              - /usr/local/src/del_eureka.sh          
+        env: 
+        - name: APP_NAME
+          value: ${PROJECT_ITEM_NAME}
+        - name: ENV_NAME
+          value: ${REPO}
+        - name: JAVA_OPTS
+          value: ${JVM_OPTS}
+        - name: EUREKA
+          value: ${EUREKA}
+        - name: PORT
+          value: ${PORT}
+        - name: skywalking_config
+          value: /mnt/xvdc/java_jn/skywalking_config.yml
+        - name: MY_POD_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP          
+        
+        volumeMounts:
+        - name: ${PROJECT_ITEM_NAME}-log
+          mountPath: /mnt/xvdc/java_jn
+        - name: script
+          mountPath: /usr/local/src/          
+        - mountPath: /etc/localtime
+          name: tz-config
+        - mountPath: /etc/timezone
+          name: tz-timezone
+      volumes:
+      - name: ${PROJECT_ITEM_NAME}-log
+        flexVolume:
+          driver: "alicloud/nas"
+          options:
+            server: "0cc8c48eae-kcb50.cn-hangzhou.nas.aliyuncs.com"
+            path: /java_k8s_log/${NAME_SPACE}
+            vers: "4.0"
+      - name: script
+        flexVolume:
+          driver: "alicloud/nas"
+          options:
+            server: "08d04498d0-rsm63.cn-hangzhou.nas.aliyuncs.com"
+            path: /script
+            vers: "4.0"            
+      - hostPath:
+          path: /usr/share/zoneinfo/Asia/Shanghai
+          type: ""
+        name: tz-config
+      - hostPath:
+          path: /etc/timezone
+          type: ""
+        name: tz-timezone
+      imagePullSecrets:
+      - name: registrysecret-vpc
