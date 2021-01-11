@@ -1,47 +1,48 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: #APP_NAME
+  name: ${PROJECT_ITEM_NAME}
   labels:
-    app: #APP_NAME
+    app: ${PROJECT_ITEM_NAME}
 spec:
   type: NodePort
   ports:
-  - name: server          #服务端口
-    port: #APP_PORT
-    targetPort: #APP_PORT
-  - name: management      #监控及监控检查的端口 
-    port: #APP_PORT
-    targetPort: #APP_PORT
+  - name: ${PROJECT_ITEM_NAME}          #服务端口
+    port: ${PORT}
+    targetPort: ${PORT}
+  - name: ${PROJECT_ITEM_NAME}      #监控及监控检查的端口 
+    port: ${PORT}
+    targetPort: ${PORT}
   selector:
-    app: #APP_NAME
+    app: ${PROJECT_ITEM_NAME}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: #APP_NAME
+  name: ${PROJECT_ITEM_NAME}
+  namespace: ${NAME_SPACE}
   labels:
-    app: #APP_NAME
+    app: ${PROJECT_ITEM_NAME}
 spec:
-  replicas: #APP_REPLICAS
+  replicas: ${REPLICAS_1}
   selector:
     matchLabels:
-      app: #APP_NAME
+      app: ${PROJECT_ITEM_NAME}
   strategy:
     type: Recreate          #设置更新策略为删除策略
   template:
     metadata:
       labels:
-        app: #APP_NAME
+        app: ${PROJECT_ITEM_NAME}
     spec:
       containers:
-      - name: #APP_NAME
-        image: #APP_IMAGE_NAME
+      - name: ${PROJECT_ITEM_NAME}
+        image: registry.cn-hangzhou.aliyuncs.com/${REPO}/${PROJECT_ITEM_NAME}:${IMAGE_ID}"
         imagePullPolicy: Always
         ports:
-        - containerPort: #APP_PORT   #服务端口
+        - containerPort: ${PORT}   #服务端口
           name: server
-        - containerPort: #APP_PORT   #监控及监控检查的端口 
+        - containerPort: ${PORT}   #监控及监控检查的端口 
           name: management
         env:
         - name: "update_uuid"
