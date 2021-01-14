@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: springboot-helloworld
-  namespace: project1
+  name: ${PROJECT_ITEM_NAME}
+  namespace: ${NAME_SPACE}
 spec:
   selector:
-    app: springboot-helloworld
+    app: ${PROJECT_ITEM_NAME}
   ports:
     - protocol: TCP
       port: 8080
@@ -17,25 +17,25 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: springboot-helloworld
-  namespace: project1
+  name: ${PROJECT_ITEM_NAME}
+  namespace: ${NAME_SPACE}
   labels:
-    app: springboot-helloworld
+    app: ${PROJECT_ITEM_NAME}
 spec:
-  replicas: 1
+  replicas: ${REPLICAS_1}
   selector:
     matchLabels:
-      app: springboot-helloworld
+      app: ${PROJECT_ITEM_NAME}
   strategy:
     type: Recreate          #设置更新策略为删除策略
   template:
     metadata:
       labels:
-        app: springboot-helloworld
+        app: ${PROJECT_ITEM_NAME}
     spec:
       containers:
-      - name: springboot-helloworld
-        image: registry.cn-hangzhou.aliyuncs.com/zyz-test/springboot-helloworld:d383adc
+      - name: ${PROJECT_ITEM_NAME}
+        image: registry.cn-hangzhou.aliyuncs.com/${REPO}/${PROJECT_ITEM_NAME}:${IMAGE_ID}"
         imagePullPolicy: Always
         ports:
         - containerPort: 8080   #服务端口
