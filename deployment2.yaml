@@ -35,7 +35,7 @@ spec:
     spec:
       containers:
       - name: ${PROJECT_ITEM_NAME}
-        image: registry.cn-hangzhou.aliyuncs.com/${REPO}/${PROJECT_ITEM_NAME}:${IMAGE_ID}"
+        image: registry.cn-hangzhou.aliyuncs.com/${REPO}/${PROJECT_ITEM_NAME}:${IMAGE_ID}
         imagePullPolicy: Always
         ports:
         - containerPort: 8080   #服务端口
